@@ -1,0 +1,8 @@
+nombre,apellido,edad,grado,email,curso,codigo,creditos,profesor,nota,periodo
+Juan,Pérez,15,1° Secundaria,juan@email.com,Matemáticas,MAT-101,3,Prof. García,16,2024-1
+María,López,16,2° Secundaria,maria@email.com,Historia,HIS-101,2,Prof. Torres,18,2024-1
+Carlos,Gómez,15,1° Secundaria,carlos@email.com,Física,FIS-101,4,Prof. Mendoza,14,2024-1
+Ana,Martínez,17,3° Secundaria,ana@email.com,Química,QUI-201,3,Prof. López,17,2024-1
+Luis,Rodríguez,16,2° Secundaria,luis@email.com,Lenguaje,LEN-102,2,Prof. Ramírez,19,2024-1
+Sofía,Hernández,15,1° Secundaria,sofia@email.com,Inglés,ING-101,3,Prof. Johnson,20,2024-1
+Diego,Silva,17,3° Secundaria,diego@email.com,Educación Física,EFI-201,1,Prof. Vargas,15,2024-1
