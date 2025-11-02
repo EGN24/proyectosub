@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 13%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 224 33% 15%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 263 70% 50%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 222 30% 20%;
+    --muted-foreground: 215 20% 70%;
+
+    --accent: 189 94% 43%;
+    --accent-foreground: 222 47% 11%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 222 30% 22%;
+    --input: 222 30% 20%;
+    --ring: 217 91% 60%;
+
+    --chart-1: 217 91% 60%;
+    --chart-2: 263 70% 50%;
+    --chart-3: 189 94% 43%;
+    --chart-4: 142 76% 36%;
+    --chart-5: 38 92% 50%;
+
+    --radius: 0.75rem;
+
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(263 70% 50%));
+    --gradient-accent: linear-gradient(180deg, hsl(189 94% 43%), hsl(217 91% 60%));
+    --gradient-card: linear-gradient(135deg, hsl(222 47% 13%), hsl(224 33% 15%));
+    
+    --shadow-sm: 0 2px 4px hsl(222 47% 5% / 0.1);
+    --shadow-md: 0 4px 12px hsl(222 47% 5% / 0.15);
+    --shadow-lg: 0 8px 24px hsl(222 47% 5% / 0.2);
+    --shadow-xl: 0 12px 36px hsl(222 47% 5% / 0.25);
+    
+    --glow-primary: 0 0 40px hsl(217 91% 60% / 0.4);
+    --glow-accent: 0 0 40px hsl(189 94% 43% / 0.4);
+    --glow-success: 0 0 40px hsl(142 76% 36% / 0.4);
+
+    --sidebar-background: 222 47% 10%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 222 30% 18%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 30% 18%;
+    --sidebar-ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+
+  .card-gradient {
+    background: var(--gradient-card);
+  }
+
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
