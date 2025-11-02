@@ -154,96 +154,87 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     loadData();
   }, [user]);
 
-  const addEstudiante = async (estudiante: Omit<Estudiante, 'id'>) => {
+  const addEstudiante = async (estudiante: Estudiante) => {
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
+      // Guardar en Supabase
       const { data, error } = await supabase
         .from('estudiantes')
-        .insert({
+        .insert([{
+          id: estudiante.id,
           nombre: estudiante.nombre,
           apellido: estudiante.apellido,
           edad: estudiante.edad,
           grado: estudiante.grado,
-          email: estudiante.email || null,
-          user_id: currentUser?.id
-        })
+          email: estudiante.email,
+        }])
         .select()
         .single();
 
       if (error) throw error;
-      
+
+      // Actualizar estado local
       setEstudiantes(prev => [data, ...prev]);
       setCurrentEstudiante(data);
-      toast.success('Estudiante agregado correctamente');
-    } catch (error: any) {
-      console.error('Error agregando estudiante:', error);
-      toast.error('Error al agregar estudiante');
+      
+      return data;
+    } catch (error) {
+      console.error('Error al guardar estudiante:', error);
       throw error;
     }
   };
 
-  const addCurso = async (curso: Omit<Curso, 'id'>) => {
+  const addCurso = async (curso: Curso) => {
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
+      // Guardar en Supabase
       const { data, error } = await supabase
         .from('cursos')
-        .insert({
+        .insert([{
+          id: curso.id,
           nombre: curso.nombre,
           codigo: curso.codigo,
           creditos: curso.creditos,
-          profesor: curso.profesor || null,
-          horario: curso.horario || null,
-          user_id: currentUser?.id
-        })
+          profesor: curso.profesor,
+          horario: curso.horario,
+        }])
         .select()
         .single();
 
       if (error) throw error;
-      
+
+      // Actualizar estado local
       setCursos(prev => [data, ...prev]);
-      toast.success('Curso agregado correctamente');
-    } catch (error: any) {
-      console.error('Error agregando curso:', error);
-      toast.error('Error al agregar curso');
+      
+      return data;
+    } catch (error) {
+      console.error('Error al guardar curso:', error);
       throw error;
     }
   };
 
-  const addCalificacion = async (calificacion: Omit<Calificacion, 'id'>) => {
+  const addCalificacion = async (calificacion: Calificacion) => {
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
+      // Guardar en Supabase
       const { data, error } = await supabase
         .from('calificaciones')
-        .insert({
+        .insert([{
+          id: calificacion.id,
           estudiante_id: calificacion.estudianteId,
           curso_id: calificacion.cursoId,
           nota: calificacion.nota,
           periodo: calificacion.periodo,
           fecha: calificacion.fecha,
-          user_id: currentUser?.id
-        })
+        }])
         .select()
         .single();
 
       if (error) throw error;
+
+      // Actualizar estado local
+      setCalificaciones(prev => [data, ...prev]);
       
-      const calificacionMapped = {
-        id: data.id,
-        estudianteId: data.estudiante_id,
-        cursoId: data.curso_id,
-        nota: data.nota,
-        periodo: data.periodo,
-        fecha: data.fecha
-      };
-      
-      setCalificaciones(prev => [calificacionMapped, ...prev]);
-      toast.success('Calificación agregada correctamente');
-    } catch (error: any) {
-      console.error('Error agregando calificación:', error);
-      toast.error('Error al agregar calificación');
+      return data;
+    } catch (error) {
+      console.error('Error al guardar calificación:', error);
       throw error;
     }
   };

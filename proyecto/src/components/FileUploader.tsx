@@ -48,94 +48,153 @@ export const FileUploader = ({ onUploadComplete }: FileUploaderProps) => {
       let cursosCount = 0;
       let calificacionesCount = 0;
 
+      // Mapas para evitar duplicados
+      const estudiantesMap = new Map<string, string>(); // email -> id
+      const cursosMap = new Map<string, string>(); // codigo -> id
+
       // Procesar datos según el formato
-      parsedData.data.forEach((row: any) => {
-        // Detectar y procesar ESTUDIANTES
-        if (row.nombre && row.apellido && (row.edad || row.grado)) {
-          const estudiante: Estudiante = {
-            id: row.id || `EST-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            nombre: row.nombre,
-            apellido: row.apellido,
-            edad: row.edad ? parseInt(row.edad) : 15,
-            grado: row.grado || '1° Secundaria',
-            email: row.email || undefined
-          };
-          addEstudiante(estudiante);
-          estudiantesCount++;
+      for (const row of parsedData.data) {
+        try {
+          // Detectar y procesar ESTUDIANTES
+          if (row.nombre && row.apellido && (row.edad || row.grado)) {
+            const estudianteKey = row.email || `${row.nombre}-${row.apellido}`;
+            
+            if (!estudiantesMap.has(estudianteKey)) {
+              const estudiante: Estudiante = {
+                id: crypto.randomUUID(),
+                nombre: row.nombre,
+                apellido: row.apellido,
+                edad: row.edad ? parseInt(row.edad) : 15,
+                grado: row.grado || '1° Secundaria',
+                email: row.email || undefined
+              };
+              
+              await addEstudiante(estudiante);
+              estudiantesMap.set(estudianteKey, estudiante.id);
+              estudiantesCount++;
+            }
+          }
+
+          // Detectar y procesar CURSOS
+          if (row.curso || row.nombreCurso || row.materia) {
+            const cursoNombre = row.curso || row.nombreCurso || row.materia;
+            const cursoCodigo = row.codigo || row.codigoCurso || `COD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+            
+            if (!cursosMap.has(cursoCodigo)) {
+              const curso: Curso = {
+                id: crypto.randomUUID(),
+                nombre: cursoNombre,
+                codigo: cursoCodigo,
+                creditos: row.creditos ? parseInt(row.creditos) : 3,
+                profesor: row.profesor || row.maestro || row.docente || undefined,
+                horario: row.horario || undefined
+              };
+              
+              await addCurso(curso);
+              cursosMap.set(cursoCodigo, curso.id);
+              cursosCount++;
+            }
+          }
+
+          // Detectar y procesar CALIFICACIONES
+          if ((row.nota !== undefined || row.calificacion !== undefined)) {
+            let estudianteId = row.estudianteId;
+            let cursoId = row.cursoId;
+
+            // Buscar estudiante por nombre si no hay ID
+            if (!estudianteId && (row.estudianteNombre || row.nombreEstudiante)) {
+              const nombreEst = row.estudianteNombre || row.nombreEstudiante;
+              estudianteId = estudiantesMap.get(nombreEst);
+            }
+
+            // Buscar curso por nombre si no hay ID
+            if (!cursoId && (row.cursoNombre || row.nombreCurso)) {
+              const nombreCurso = row.cursoNombre || row.nombreCurso;
+              for (const [codigo, id] of cursosMap.entries()) {
+                cursoId = id;
+                break; // Tomar el primero por ahora
+              }
+            }
+
+            // Si encontramos estudiante y curso, crear calificación
+            if (estudianteId && cursoId) {
+              const calificacion: Calificacion = {
+                id: crypto.randomUUID(),
+                estudianteId: estudianteId,
+                cursoId: cursoId,
+                nota: parseFloat(row.nota || row.calificacion || '0'),
+                periodo: row.periodo || '2024-1',
+                fecha: row.fecha || new Date().toISOString()
+              };
+              
+              await addCalificacion(calificacion);
+              calificacionesCount++;
+            }
+          }
+
+          // Formato alternativo: fila con estudiante + curso + nota
+          if (row.nombre && row.apellido && (row.curso || row.materia) && 
+              (row.nota !== undefined || row.calificacion !== undefined)) {
+            
+            // Crear o buscar estudiante
+            const estudianteKey = row.email || `${row.nombre}-${row.apellido}`;
+            let estudianteId = estudiantesMap.get(estudianteKey);
+            
+            if (!estudianteId) {
+              const estudiante: Estudiante = {
+                id: crypto.randomUUID(),
+                nombre: row.nombre,
+                apellido: row.apellido,
+                edad: row.edad ? parseInt(row.edad) : 15,
+                grado: row.grado || '1° Secundaria',
+                email: row.email || undefined
+              };
+              
+              await addEstudiante(estudiante);
+              estudiantesMap.set(estudianteKey, estudiante.id);
+              estudianteId = estudiante.id;
+              estudiantesCount++;
+            }
+
+            // Crear o buscar curso
+            const cursoNombre = row.curso || row.materia;
+            const cursoCodigo = row.codigoCurso || `COD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+            let cursoId = cursosMap.get(cursoCodigo);
+            
+            if (!cursoId) {
+              const curso: Curso = {
+                id: crypto.randomUUID(),
+                nombre: cursoNombre,
+                codigo: cursoCodigo,
+                creditos: row.creditos ? parseInt(row.creditos) : 3,
+                profesor: row.profesor || row.maestro || undefined,
+                horario: row.horario || undefined
+              };
+              
+              await addCurso(curso);
+              cursosMap.set(cursoCodigo, curso.id);
+              cursoId = curso.id;
+              cursosCount++;
+            }
+
+            // Crear calificación
+            const calificacion: Calificacion = {
+              id: crypto.randomUUID(),
+              estudianteId: estudianteId,
+              cursoId: cursoId,
+              nota: parseFloat(row.nota || row.calificacion || '0'),
+              periodo: row.periodo || '2024-1',
+              fecha: row.fecha || new Date().toISOString()
+            };
+            
+            await addCalificacion(calificacion);
+            calificacionesCount++;
+          }
+        } catch (rowError) {
+          console.error('Error procesando fila:', rowError, row);
+          // Continuar con la siguiente fila
         }
-
-        // Detectar y procesar CURSOS
-        if (row.curso || row.nombreCurso || row.materia) {
-          const curso: Curso = {
-            id: row.cursoId || row.id || `CUR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            nombre: row.curso || row.nombreCurso || row.materia,
-            codigo: row.codigo || row.codigoCurso || `COD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
-            creditos: row.creditos ? parseInt(row.creditos) : 3,
-            profesor: row.profesor || row.maestro || row.docente || undefined,
-            horario: row.horario || undefined
-          };
-          addCurso(curso);
-          cursosCount++;
-        }
-
-        // Detectar y procesar CALIFICACIONES
-        if ((row.nota !== undefined || row.calificacion !== undefined) && 
-            (row.estudianteId || row.estudianteNombre) && 
-            (row.cursoId || row.cursoNombre)) {
-          const calificacion: Calificacion = {
-            id: `CAL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            estudianteId: row.estudianteId || `EST-${row.estudianteNombre}`,
-            cursoId: row.cursoId || `CUR-${row.cursoNombre}`,
-            nota: parseFloat(row.nota || row.calificacion || '0'),
-            periodo: row.periodo || '2024-1',
-            fecha: row.fecha || new Date().toISOString()
-          };
-          addCalificacion(calificacion);
-          calificacionesCount++;
-        }
-
-        // Formato alternativo: fila con estudiante + curso + nota
-        if (row.nombre && row.apellido && (row.curso || row.materia) && (row.nota !== undefined || row.calificacion !== undefined)) {
-          // Crear estudiante
-          const estudianteId = `EST-${row.nombre}-${row.apellido}-${Date.now()}`;
-          const estudiante: Estudiante = {
-            id: estudianteId,
-            nombre: row.nombre,
-            apellido: row.apellido,
-            edad: row.edad ? parseInt(row.edad) : 15,
-            grado: row.grado || '1° Secundaria',
-            email: row.email || undefined
-          };
-          addEstudiante(estudiante);
-          estudiantesCount++;
-
-          // Crear curso si tiene
-          const cursoNombre = row.curso || row.materia;
-          const cursoId = `CUR-${cursoNombre}-${Date.now()}`;
-          const curso: Curso = {
-            id: cursoId,
-            nombre: cursoNombre,
-            codigo: row.codigoCurso || `COD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
-            creditos: row.creditos ? parseInt(row.creditos) : 3,
-            profesor: row.profesor || row.maestro || undefined,
-            horario: row.horario || undefined
-          };
-          addCurso(curso);
-          cursosCount++;
-
-          // Crear calificación
-          const calificacion: Calificacion = {
-            id: `CAL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            estudianteId: estudianteId,
-            cursoId: cursoId,
-            nota: parseFloat(row.nota || row.calificacion || '0'),
-            periodo: row.periodo || '2024-1',
-            fecha: row.fecha || new Date().toISOString()
-          };
-          addCalificacion(calificacion);
-          calificacionesCount++;
-        }
-      });
+      }
 
       setStats({
         estudiantes: estudiantesCount,
@@ -144,7 +203,7 @@ export const FileUploader = ({ onUploadComplete }: FileUploaderProps) => {
       });
 
       setUploadStatus('success');
-      toast.success(`¡Datos cargados exitosamente! ${estudiantesCount} estudiantes, ${cursosCount} cursos, ${calificacionesCount} calificaciones`);
+      toast.success(`¡Datos cargados! ${estudiantesCount} estudiantes, ${cursosCount} cursos, ${calificacionesCount} calificaciones`);
       
       if (onUploadComplete) {
         onUploadComplete();
@@ -235,7 +294,7 @@ export const FileUploader = ({ onUploadComplete }: FileUploaderProps) => {
             {isProcessing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Procesando...
+                Procesando y guardando en Supabase...
               </>
             ) : (
               <>
